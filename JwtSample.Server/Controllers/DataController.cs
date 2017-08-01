@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace JwtSample.Server.Controllers
 {
-    [Route("api/[controller]")]
+    //[Route("api/[controller]")]
     public class DataController : Controller
     {
         [Authorize]
@@ -18,7 +18,7 @@ namespace JwtSample.Server.Controllers
         }
 
         [Authorize]
-        [HttpPost("childs")]
+        [HttpPost("children")]
         public IActionResult AddChild(string childName, DateTimeOffset birthDate)
         {
             return Ok($"{childName} ({birthDate.ToString("d")}) added");
