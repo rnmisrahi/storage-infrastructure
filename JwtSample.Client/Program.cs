@@ -30,7 +30,7 @@ namespace JwtSample.Client
 
             if (getTokenTask != null)
             {
-                string jwt = getTokenTask.Result.access_token;
+                string jwt = getTokenTask.Result.token;
 
                 Console.WriteLine($"Your token is {jwt}");
 
@@ -38,7 +38,7 @@ namespace JwtSample.Client
 
                 try
                 {
-                    addChildTask = AddChildAsync(new Uri(new Uri(url), "api/data/childs"), jwt, "Anna", "2017-01-01");
+                    addChildTask = AddChildAsync(new Uri(new Uri(url), "children"), jwt, "Anna", "2017-01-01");
                     addChildTask.Wait();
                 }
                 catch
@@ -60,15 +60,15 @@ namespace JwtSample.Client
         /// Get JWT token
         /// </summary>
         /// <param name="uri">Endpoint URI</param>
-        /// <param name="personId">Person ID</param>
+        /// <param name="facebookId">Person ID</param>
         /// <returns>Token Info</returns>
-        static async Task<TokenInfo> GetTokenAsync(Uri uri, string personId)
+        static async Task<TokenInfo> GetTokenAsync(Uri uri, string facebookId)
         {
             // Create HTTP Client
             HttpClient client = new HttpClient();
 
             // Add parameters
-            HttpContent content = new StringContent($"personid={personId}");
+            HttpContent content = new StringContent($"facebookId={facebookId}");
             // Add Content-Type header
             content.Headers.ContentType.MediaType = "application/x-www-form-urlencoded";
 

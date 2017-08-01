@@ -16,7 +16,7 @@
         </div>
         <form class="loginForm form-inline">
             <label>Enter your User ID</label>
-            <input type="text" id="userId" value="RubenMisrahi" />
+            <input type="text" id="userId" value="RubsMisrahi" />
             <input type="submit" id="submitLogin" value="Sign in" />
         </form>
         <hr/>
@@ -30,24 +30,24 @@
     </div>
         <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
         <script>
-            var tokenKey = "accessToken";
+            var tokenKey = "Login";
             $('#submitLogin').click(function (e) {
                 e.preventDefault();
                 var loginData = {
-                    personid: $('#userId').val()//,
+                    facebookId: $('#userId').val()//,
                 };
 
                 $.ajax({
                     type: 'POST',
-                    url: 'token',
+                    url: 'login',
                     data: loginData
                 }).success(function (data) {
                     $('.userId').text(data.username);
                     $('.userInfo').css('display', 'block');
                     $('.loginForm').css('display', 'none');
                     // saving JWT token in the sessionStorage
-                    sessionStorage.setItem(tokenKey, data.access_token);
-                    alert('Your token is ' + data.access_token);
+                    sessionStorage.setItem(tokenKey, data.token);
+                    alert('Your token is ' + data.token);
                 }).fail(function (data) {
                     alert(data.responseText);
                 });
@@ -69,7 +69,7 @@
 
                 $.ajax({
                     type: 'POST',
-                    url: 'api/data/childs',
+                    url: 'children',
                     data: childData,
                     beforeSend: function (xhr) {
 
@@ -77,9 +77,9 @@
                         xhr.setRequestHeader("Authorization", "Bearer " + token);
                     }
                 }).success(function (data) {
-                        alert(data);
+                        alert("Data: " + data);
                     }).fail(function (data) {
-                        alert(data.statusText);
+                        alert("Status: " + data.statusText);
                     })
                 });
         </script>

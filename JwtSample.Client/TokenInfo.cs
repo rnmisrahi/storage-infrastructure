@@ -6,7 +6,8 @@ namespace JwtSample.Client
 {
     public class TokenInfo
     {
-        public string access_token { get; set; }
+        public string token { get; set; }
         public string username { get; set; }
+        public bool signedUp { get; set; }
     }
 }

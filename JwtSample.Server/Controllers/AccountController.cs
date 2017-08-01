@@ -16,15 +16,19 @@ namespace JwtSample.Server.Controllers
     {
         private List<Person> people = new List<Person>
         {
-            new Person { PersonId="RubenMisrahi", Role = "admin" }
+            new Person { FacebookId="RubenMisrahi", Role = "admin" }
         };
 
-        [HttpPost("/token")]
+        [HttpPost("/login")]
         public async Task Token()
         {
-            var personId = Request.Form["personid"];
+            var 
+                facebookId = Request.Form["facebookId"];
 
-            var identity = GetIdentity(personId);
+            var qs = Request.Query.FirstOrDefault(x => x.Key == "facebookId");
+
+            var identity = GetIdentity(facebookId);
+            var identity2 = GetIdentity(qs.Value);
             if (identity == null)
             {
                 Response.StatusCode = 400;
@@ -45,8 +49,9 @@ namespace JwtSample.Server.Controllers
 
             var response = new
             {
-                access_token = encodedJwt,
-                username = identity.Name
+                token = encodedJwt,
+                username = identity.Name,
+                signedUp = true
             };
 
             // Serialize response
@@ -54,14 +59,14 @@ namespace JwtSample.Server.Controllers
             await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
         }
 
-        private ClaimsIdentity GetIdentity(string personId)
+        private ClaimsIdentity GetIdentity(string facebookId)
         {
-            Person person = people.FirstOrDefault(x => x.PersonId == personId);
+            Person person = people.FirstOrDefault(x => x.FacebookId == facebookId);
             if (person != null)
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, person.PersonId),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, person.FacebookId),
                     new Claim(ClaimsIdentity.DefaultRoleClaimType, person.Role)
                 };
                 ClaimsIdentity claimsIdentity =

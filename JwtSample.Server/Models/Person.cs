@@ -7,8 +7,9 @@ namespace JwtSample.Server.Models
 {
     public class Person
     {
-        public string PersonId { get; set; }
+        public string FacebookId { get; set; }
 
+        public bool SignedUp { get; set; }
         public string Role { get; set; }
     }
 }
