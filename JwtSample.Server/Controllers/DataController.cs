@@ -1,15 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using JwtSample.Server.Data;
 
 namespace JwtSample.Server.Controllers
 {
     //[Route("api/[controller]")]
     public class DataController : Controller
     {
+        private readonly ApplicationDbContext _context;
+        public DataController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
         [Authorize]
         [HttpGet("userInfo")]
         public IActionResult GetUserInfo()
@@ -19,9 +23,21 @@ namespace JwtSample.Server.Controllers
 
         [Authorize]
         [HttpPost("children")]
-        public IActionResult AddChild(string childName, DateTimeOffset birthDate)
+        public IActionResult AddChild(string name, DateTimeOffset birthday)
+        //public IActionResult AddChild(string name, DateTimeOffset birthday)
         {
-            return Ok($"{childName} ({birthDate.ToString("d")}) added");
+            var response = new
+            {
+                name = name,
+                birthday = birthday
+            };
+
+            // Serialize response
+            Response.ContentType = "application/json";
+            
+            //await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
+
+            return Ok($"{name} ({birthday.ToString("d")}) added");
         }
     }
 }

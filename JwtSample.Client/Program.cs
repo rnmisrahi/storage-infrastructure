@@ -60,15 +60,15 @@ namespace JwtSample.Client
         /// Get JWT token
         /// </summary>
         /// <param name="uri">Endpoint URI</param>
-        /// <param name="facebookId">Person ID</param>
+        /// <param name="educatorId">Person ID</param>
         /// <returns>Token Info</returns>
-        static async Task<TokenInfo> GetTokenAsync(Uri uri, string facebookId)
+        static async Task<TokenInfo> GetTokenAsync(Uri uri, string educatorId)
         {
             // Create HTTP Client
             HttpClient client = new HttpClient();
 
             // Add parameters
-            HttpContent content = new StringContent($"facebookId={facebookId}");
+            HttpContent content = new StringContent($"educatorId={educatorId}");
             // Add Content-Type header
             content.Headers.ContentType.MediaType = "application/x-www-form-urlencoded";
 

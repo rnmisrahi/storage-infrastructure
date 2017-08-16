@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>JWT token sample</h1>
+        <h1>MY JWT token sample</h1>
         <div class="userInfo" style="display:none;">
             <p>You entered as: <span class="userId"></span></p>
             <input type="button" value="Exit" id="logOut" />
@@ -21,10 +21,10 @@
         </form>
         <hr/>
         <div>
-            <label>Child name</label>
-            <input type="text" id="childName" value="Anna" />
+            <label>Name</label>
+            <input type="text" id="name" value="Anna" />
             <label>Birth date</label>
-            <input type="date" id="birthDate" value="2017-01-01" />
+            <input type="date" id="birthday" value="2017-01-01" />
             <input type="submit" id="addChild" value="Add child" />
         </div>
     </div>
@@ -34,7 +34,7 @@
             $('#submitLogin').click(function (e) {
                 e.preventDefault();
                 var loginData = {
-                    facebookId: $('#userId').val()//,
+                    educatorId: $('#userId').val()//,
                 };
 
                 $.ajax({
@@ -63,8 +63,8 @@
             $('#addChild').click(function (e) {
                 e.preventDefault();
                 var childData = {
-                    childName: $('#childName').val(),
-                    birthDate: $('#birthDate').val()
+                    name: $('#childName').val(),
+                    birthday: $('#birthDate').val()
                 };
 
                 $.ajax({
