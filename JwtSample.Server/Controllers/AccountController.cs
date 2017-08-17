@@ -23,8 +23,8 @@ namespace JwtSample.Server.Controllers
             try
             {
                 var
-                    educatorId = Request.Form["educatorId"];
-                var identity = Utilities.GetIdentity(educatorId);
+                    facebookId = Request.Form["facebookId"];
+                var identity = Utilities.GetIdentity(facebookId);
                 Response.ContentType = "application/json";
                 if (identity == null)
                 {
@@ -36,7 +36,7 @@ namespace JwtSample.Server.Controllers
                 bool exists = false;
                 if (mayExist)
                 {
-                    string search = educatorId;
+                    string search = facebookId;
                     var q = _context.Educators.Where(x => x.EducatorId == search).FirstOrDefault();
 
                     //var q = _context.Educators.Find(x => x.EducatorId == "educatorId");
@@ -57,11 +57,11 @@ namespace JwtSample.Server.Controllers
                 { //Doesn't exist. Generate token and add
                     var responseNew = new
                     {
-                        token = Utilities.generateToken(educatorId),
+                        token = Utilities.generateToken(facebookId),
                         username = identity.Name,
                         signedUp = true
                     };
-                    Educator educator = new Educator { EducatorId = educatorId, token = responseNew.token, SignedUp = true };
+                    Educator educator = new Educator { EducatorId = facebookId, token = responseNew.token, SignedUp = true };
                     _context.Educators.Add(educator);
                     _context.SaveChanges();
                     await Response.WriteAsync(JsonConvert.SerializeObject(responseNew, new JsonSerializerSettings { Formatting = Formatting.Indented }));

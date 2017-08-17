@@ -62,31 +62,88 @@ namespace JwtSample.Server.Controllers
             return Ok(_context.Educators);
         }
 
+        private ObjectResult sendError(string msg)
+        {
+            var error = new
+            {
+                message = msg,
+                status = Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError
+            };
+            Response.StatusCode = error.status;
+            return new ObjectResult(error);
+        }
+
+        [Authorize]
+        [HttpGet("api/v1/children")]
+        public IActionResult Children()
+        {
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                var claims = HttpContext.User.Claims;
+                var id = HttpContext.User.Claims.First().Value;
+                var educator = _context.Educators.SingleOrDefault(e => e.EducatorId == id);
+                if (educator == null)
+                    return sendError("Educator NOT found");
+
+                var children = _context.Children.Where(c => c.EducatorId == id);
+
+                return Ok(children);
+            }
+            catch(Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+
+        }
+
         [Authorize]
         [HttpPost("children")]
         public IActionResult AddChild(string name, DateTime birthday)
         //public IActionResult AddChild(string name, DateTimeOffset birthday)
         {
-            List<Educator> educators = _context.Educators.ToList();
-            Educator educatorX = _context.Educators.FirstOrDefault();
+            // Serialize response
+            Response.ContentType = "application/json";
+
+            //List<Educator> educators = _context.Educators.ToList();
+            //Educator educatorX= _context.Educators.FirstOrDefault();
 
             var claims = HttpContext.User.Claims;
             var id = HttpContext.User.Claims.First().Value;
             var educator = _context.Educators.SingleOrDefault(e => e.EducatorId == id);
 
+            if (educator == null)//Should not happen, because Authorize probably would not accept that token
+            {
+                var error = new
+                {
+                    message = "Educator NOT found",
+                    status = Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError
+                };
+                Response.StatusCode = error.status;
+                return new ObjectResult(error);                
+            }
+
+            //Find the educator and check child unicity
+            var q = _context.Children.Where(c => (c.Name == name) && c.EducatorId == educator.EducatorId);
+            if (q.Count() > 0)
+            {
+                return sendError("Child already exists");
+
+                //var error = new
+                //{
+                //    message = "Child already added",
+                //    status = Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError
+                //};
+                //Response.StatusCode = error.status;
+                //return new ObjectResult(error);
+            }
+
             var child = new Child { Name = name, Birthday = birthday, EducatorId = educator.EducatorId };
             _context.Children.Add(child);
             _context.SaveChanges();
 
-            var response = new
-            {
-                name = name,
-                birthday = birthday
-            };
-
-            // Serialize response
-            Response.ContentType = "application/json";
-            
             //await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
 
             return Ok(child);

@@ -17,9 +17,9 @@ namespace JwtSample.Server.Data
         };
 
 
-        public static string generateToken(string educatorId)
+        public static string generateToken(string facebookId)
         {
-            var identity = GetIdentity(educatorId);
+            var identity = GetIdentity(facebookId);
             var now = DateTime.UtcNow;
             // creating JWT-token
             var jwt = new JwtSecurityToken(
@@ -40,14 +40,14 @@ namespace JwtSample.Server.Data
         /// Here we define who has the right to sign in.
         /// For now we allow anyone
         /// </summary>
-        /// <param name="educatorId"></param>
+        /// <param name="facebookId"></param>
         /// <returns></returns>
-        public static ClaimsIdentity GetIdentity(string educatorId)
+        public static ClaimsIdentity GetIdentity(string facebookId)
         {
-            Educator educator = educators.FirstOrDefault(x => x.EducatorId == educatorId);
+            Educator educator = educators.FirstOrDefault(x => x.EducatorId == facebookId);
             if (educator == null)
             {
-                educator = new Educator { EducatorId = educatorId, Role = "User" };
+                educator = new Educator { EducatorId = facebookId, Role = "User" };
             }
             var claims = new List<Claim>
                 {
@@ -60,7 +60,7 @@ namespace JwtSample.Server.Data
             return claimsIdentity;
 
             // if the user cannot be found and could not be found or added
-            throw new Exception(educatorId + " Could NOT be found or added");
+            throw new Exception(facebookId + " Could NOT be found or added");
         }
     }
 
