@@ -1,13 +1,9 @@
 ﻿using JwtSample.Server.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using JwtSample.Server.Data;
 
@@ -21,28 +17,6 @@ namespace JwtSample.Server.Controllers
             _context = context;
         }
 
-        private List<Educator> educators = new List<Educator>
-        {
-            new Educator { EducatorId="RubenMisrahi", Role = "admin" }
-        };
-
-        private string generateToken(string educatorId)
-        {
-            var identity = GetIdentity(educatorId);
-            var now = DateTime.UtcNow;
-            // creating JWT-token
-            var jwt = new JwtSecurityToken(
-                    issuer: AuthOptions.Issuer,
-                    audience: AuthOptions.Audience,
-                    notBefore: now,
-                    claims: identity.Claims,
-                    expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LifeTime)),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-            return encodedJwt;
-
-        }
         [HttpPost("/login")]
         public async Task Token()
         {
@@ -50,7 +24,7 @@ namespace JwtSample.Server.Controllers
             {
                 var
                     educatorId = Request.Form["educatorId"];
-                var identity = GetIdentity(educatorId);
+                var identity = Utilities.GetIdentity(educatorId);
                 Response.ContentType = "application/json";
                 if (identity == null)
                 {
@@ -63,8 +37,6 @@ namespace JwtSample.Server.Controllers
                 if (mayExist)
                 {
                     string search = educatorId;
-                    var qq = _context.Educators.Where(x => x.EducatorId == search).FirstOrDefault();
-                    var qqq = _context.Educators.Where(x => x.EducatorId == "RubenMisrahi").FirstOrDefault();
                     var q = _context.Educators.Where(x => x.EducatorId == search).FirstOrDefault();
 
                     //var q = _context.Educators.Find(x => x.EducatorId == "educatorId");
@@ -85,7 +57,7 @@ namespace JwtSample.Server.Controllers
                 { //Doesn't exist. Generate token and add
                     var responseNew = new
                     {
-                        token = generateToken(educatorId),
+                        token = Utilities.generateToken(educatorId),
                         username = identity.Name,
                         signedUp = true
                     };
@@ -121,31 +93,50 @@ namespace JwtSample.Server.Controllers
             //await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
         }
 
-        /// <summary>
-        /// Here we define who has the right to sign in.
-        /// For now we allow anyone
-        /// </summary>
-        /// <param name="educatorId"></param>
-        /// <returns></returns>
-        private ClaimsIdentity GetIdentity(string educatorId)
-        {
-            Educator educator = educators.FirstOrDefault(x => x.EducatorId == educatorId);
-            if (educator == null)
-            {
-                educator = new Educator { EducatorId = educatorId, Role = "User" };
-            }
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, educator.EducatorId),
-                    new Claim(ClaimsIdentity.DefaultRoleClaimType, educator.Role)
-                };
-                ClaimsIdentity claimsIdentity =
-                new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
-                    ClaimsIdentity.DefaultRoleClaimType);
-                return claimsIdentity;
+        ///// <summary>
+        ///// Here we define who has the right to sign in.
+        ///// For now we allow anyone
+        ///// </summary>
+        ///// <param name="educatorId"></param>
+        ///// <returns></returns>
+        //private ClaimsIdentity GetIdentity(string educatorId)
+        //{
+        //    Educator educator = educators.FirstOrDefault(x => x.EducatorId == educatorId);
+        //    if (educator == null)
+        //    {
+        //        educator = new Educator { EducatorId = educatorId, Role = "User" };
+        //    }
+        //        var claims = new List<Claim>
+        //        {
+        //            new Claim(ClaimsIdentity.DefaultNameClaimType, educator.EducatorId),
+        //            new Claim(ClaimsIdentity.DefaultRoleClaimType, educator.Role)
+        //        };
+        //        ClaimsIdentity claimsIdentity =
+        //        new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
+        //            ClaimsIdentity.DefaultRoleClaimType);
+        //        return claimsIdentity;
 
-            // if the user cannot be found and could not be found or added
-            throw new Exception(educatorId + " Could NOT be found or added");
-        }
-    }
+        //    // if the user cannot be found and could not be found or added
+        //    throw new Exception(educatorId + " Could NOT be found or added");
+        //}
+
+        //private string generateToken(string educatorId)
+        //{
+        //    var identity = Utilities.GetIdentity(educatorId);
+        //    var now = DateTime.UtcNow;
+        //    // creating JWT-token
+        //    var jwt = new JwtSecurityToken(
+        //            issuer: AuthOptions.Issuer,
+        //            audience: AuthOptions.Audience,
+        //            notBefore: now,
+        //            claims: identity.Claims,
+        //            expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LifeTime)),
+        //            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+        //    var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+        //    return encodedJwt;
+
+        //}
+
+    } //AccountController
 }

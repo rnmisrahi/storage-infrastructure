@@ -8,7 +8,9 @@ namespace JwtSample.Server.Models
     public class Child
     {
         public int ChildId { get; set; }
-        public string ParentId { get; set; }
-
+        public string EducatorId { get; set; }
+        public string Name { get; set; }
+        public DateTime Birthday { get; set; }
+        public string Image { get; set; }
     }
 }
