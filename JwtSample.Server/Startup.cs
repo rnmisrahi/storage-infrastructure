@@ -88,7 +88,12 @@ namespace JwtSample.Server
                 }
             });
 
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "api/v1/{controller=Home}/{action=Index}/{id?}");
+            });
 
             DBInitializer.Initialize(context);
         }
