@@ -22,9 +22,19 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
-                var
-                    facebookId = Request.Form["facebookId"];
+                //This could be used to get the Login as Json
+                //StreamReader am = new StreamReader(Request.Body);
+                //string result = await am.ReadToEndAsync();
+                //JsonSerializer ser = new JsonSerializer();
+                //UserLogin user = JsonConvert.DeserializeObject<UserLogin>(result);
+                //var facebookId = user.facebookId;
+
+                //This is as it is now: urlencode
+                var facebookId = Request.Form["facebookId"];
+
+
                 var identity = Utilities.GetIdentity(facebookId);
+
                 Response.ContentType = "application/json";
                 if (identity == null)
                 {

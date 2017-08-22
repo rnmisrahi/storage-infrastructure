@@ -5,6 +5,7 @@ using JwtSample.Server.Data;
 using JwtSample.Server.Models;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace JwtSample.Server.Controllers
 {
@@ -39,7 +40,7 @@ namespace JwtSample.Server.Controllers
 
         [Authorize]
         [HttpPost("api/v1/senduserdetails")]
-        public ActionResult SendUserDetails(Educator educator)
+        public ActionResult SendUserDetails([FromBody]Educator educator)
         {
             Response.ContentType = "application/json";
             try
@@ -139,28 +140,27 @@ namespace JwtSample.Server.Controllers
 
         [Authorize]
         [HttpPost("api/v1/children")]
-        //public IActionResult AddChild([FromBody] Child childToAdd)
-        public IActionResult PostChildren(string name, DateTime birthday)
+        public IActionResult PostChildren([FromBody] Child child)
         {
             // Serialize response
             Response.ContentType = "application/json";
-
+            Request.ContentType = "application/json";
             Educator educator = getSecureUser();
             if (educator == null)//Should not happen, because Authorize probably would not accept that token
                 return sendError("User NOT found");
 
             //Find the educator and check child unicity
-            var q = _context.Children.Where(c => (c.Name == name) && c.EducatorId == educator.EducatorId);
+            var q = _context.Children.Where(c => (c.Name == child.Name) && c.EducatorId == educator.EducatorId);
             if (q.Count() > 0)
                 return sendError("Child already exists");
 
-            var child = new Child { Name = name, Birthday = birthday, EducatorId = educator.EducatorId };
-            _context.Children.Add(child);
+            var newChild = new Child { Name = child.Name, Birthday = child.Birthday, EducatorId = educator.EducatorId };
+            _context.Children.Add(newChild);
             _context.SaveChanges();
 
             //await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
 
-            return Ok(child);
+            return Ok(newChild);
         }//PostChildren
 
         [Authorize]
@@ -186,7 +186,7 @@ namespace JwtSample.Server.Controllers
 
         [Authorize]
         [HttpPut("api/v1/children/{id}")]
-        public IActionResult Children(int? id, [Bind("Name, Nickname, Birthday,Image")]Child child)
+        public IActionResult Children(int? id, [FromBody][Bind("Name, Nickname, Birthday,Image")]Child child)
         {
             Response.ContentType = "application/json";
 
