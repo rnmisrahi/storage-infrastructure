@@ -11,6 +11,8 @@ namespace JwtSample.Server.Data
         public static void Initialize(ApplicationDbContext context)
         {
             context.Database.EnsureCreated();
+
+            var e = context.Educators;
         }
     }
 }

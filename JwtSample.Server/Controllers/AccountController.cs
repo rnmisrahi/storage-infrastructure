@@ -6,12 +6,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using JwtSample.Server.Data;
+using Microsoft.Extensions.Options;
 
 namespace JwtSample.Server.Controllers
 {
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
+
         public AccountController(ApplicationDbContext context)
         {
             _context = context;
@@ -47,15 +49,15 @@ namespace JwtSample.Server.Controllers
                 if (mayExist)
                 {
                     string search = facebookId;
-                    var q = _context.Educators.Where(x => x.EducatorId == search).FirstOrDefault();
+                    var q = _context.Educators.Where(x => x.FacebookId == search).FirstOrDefault();
 
                     //var q = _context.Educators.Find(x => x.EducatorId == "educatorId");
-                    exists = (q != null) && (q.EducatorId != null);
+                    exists = (q != null) && (q.FacebookId != null);
                     if (exists) // The following implies that the token was found
                     {
                         var responseExists = new
                         {
-                            token = q.token,
+                            token = q.Token,
                             username = identity.Name,
                             signedUp = true
                         };
@@ -71,7 +73,7 @@ namespace JwtSample.Server.Controllers
                         username = identity.Name,
                         signedUp = true
                     };
-                    Educator educator = new Educator { EducatorId = facebookId, token = responseNew.token, SignedUp = true };
+                    Educator educator = new Educator { FacebookId = facebookId, Token = responseNew.token, SignedUp = true };
                     _context.Educators.Add(educator);
                     _context.SaveChanges();
                     await Response.WriteAsync(JsonConvert.SerializeObject(responseNew, new JsonSerializerSettings { Formatting = Formatting.Indented }));
@@ -90,63 +92,7 @@ namespace JwtSample.Server.Controllers
                 return;
             }
 
-            //var qs = Request.Query.FirstOrDefault(x => x.Key == "educatorId");
-
-            //var response = new
-            //{
-            //    token = ,
-            //    username = identity.Name,
-            //    signedUp = true
-            //};
-
-            //// Serialize response
-            //await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
         }
-
-        ///// <summary>
-        ///// Here we define who has the right to sign in.
-        ///// For now we allow anyone
-        ///// </summary>
-        ///// <param name="educatorId"></param>
-        ///// <returns></returns>
-        //private ClaimsIdentity GetIdentity(string educatorId)
-        //{
-        //    Educator educator = educators.FirstOrDefault(x => x.EducatorId == educatorId);
-        //    if (educator == null)
-        //    {
-        //        educator = new Educator { EducatorId = educatorId, Role = "User" };
-        //    }
-        //        var claims = new List<Claim>
-        //        {
-        //            new Claim(ClaimsIdentity.DefaultNameClaimType, educator.EducatorId),
-        //            new Claim(ClaimsIdentity.DefaultRoleClaimType, educator.Role)
-        //        };
-        //        ClaimsIdentity claimsIdentity =
-        //        new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
-        //            ClaimsIdentity.DefaultRoleClaimType);
-        //        return claimsIdentity;
-
-        //    // if the user cannot be found and could not be found or added
-        //    throw new Exception(educatorId + " Could NOT be found or added");
-        //}
-
-        //private string generateToken(string educatorId)
-        //{
-        //    var identity = Utilities.GetIdentity(educatorId);
-        //    var now = DateTime.UtcNow;
-        //    // creating JWT-token
-        //    var jwt = new JwtSecurityToken(
-        //            issuer: AuthOptions.Issuer,
-        //            audience: AuthOptions.Audience,
-        //            notBefore: now,
-        //            claims: identity.Claims,
-        //            expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LifeTime)),
-        //            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-        //    var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-        //    return encodedJwt;
-
-        //}
 
     } //AccountController
 }

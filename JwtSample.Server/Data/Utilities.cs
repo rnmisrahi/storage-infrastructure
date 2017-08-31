@@ -13,7 +13,7 @@ namespace JwtSample.Server.Data
     {
         public static List<Educator> educators = new List<Educator>
         {
-            new Educator { EducatorId="RubenMisrahi", Role = "admin" }
+            new Educator { FacebookId="RNMisrahi", Role = "admin" }
         };
 
 
@@ -44,14 +44,14 @@ namespace JwtSample.Server.Data
         /// <returns></returns>
         public static ClaimsIdentity GetIdentity(string facebookId)
         {
-            Educator educator = educators.FirstOrDefault(x => x.EducatorId == facebookId);
+            Educator educator = educators.FirstOrDefault(x => x.FacebookId == facebookId);
             if (educator == null)
             {
-                educator = new Educator { EducatorId = facebookId, Role = "User" };
+                educator = new Educator { FacebookId = facebookId, Role = "User" };
             }
             var claims = new List<Claim>
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, educator.EducatorId),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, educator.FacebookId),
                     new Claim(ClaimsIdentity.DefaultRoleClaimType, educator.Role)
                 };
             ClaimsIdentity claimsIdentity =

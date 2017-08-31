@@ -7,12 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using JwtSample.Server.Data;
 using Microsoft.IdentityModel.Tokens;
+using JwtSample.Server.Controllers;
 
 namespace JwtSample.Server
 {
     public class Startup
     {
         private IHostingEnvironment _env;
+        private string _testSecret = null;
 
         public Startup(IHostingEnvironment env)
         {
@@ -26,7 +28,7 @@ namespace JwtSample.Server
             if (env.IsDevelopment())
             {
                 // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                //builder.AddUserSecrets<Startup>();
+                builder.AddUserSecrets<Startup>();
             }
 
             builder.AddEnvironmentVariables();
@@ -39,9 +41,14 @@ namespace JwtSample.Server
         public void ConfigureServices(IServiceCollection services)
         {
             String connectionString = _env.IsDevelopment() ? "LocalConnection" : "DefaultConnection";
+
+            _testSecret = Configuration["JwtSecret"];
+
             // Add framework services.
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString(connectionString)));
+
+            services.Configure<AppOptions>(options => Configuration.Bind(options));
 
             //services
             //    .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -52,8 +59,8 @@ namespace JwtSample.Server
             //    options.Password.RequireUppercase = false;
             //    options.Password.RequireNonAlphanumeric = false;
             //})
-                //.AddEntityFrameworkStores<ApplicationDbContext>()
-                //.AddDefaultTokenProviders();
+            //.AddEntityFrameworkStores<ApplicationDbContext>()
+            //.AddDefaultTokenProviders();
 
             services.AddMvc();
         }

@@ -5,7 +5,6 @@ using JwtSample.Server.Data;
 using JwtSample.Server.Models;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
 
 namespace JwtSample.Server.Controllers
 {
@@ -23,7 +22,7 @@ namespace JwtSample.Server.Controllers
             try
             {
                 var id = HttpContext.User.Claims.First().Value;
-                return _context.Educators.SingleOrDefault(e => e.EducatorId == id);
+                return _context.Educators.SingleOrDefault(e => e.FacebookId == id);
             }
             catch
             {
@@ -49,7 +48,7 @@ namespace JwtSample.Server.Controllers
                 if (userInfo == null)
                     sendError("User NOT found");
                 userInfo.Birthday = educator.Birthday ?? userInfo.Birthday;
-                userInfo.email = educator.email ?? userInfo.email;
+                userInfo.Email = educator.Email ?? userInfo.Email;
                 userInfo.FirstName = educator.FirstName ?? userInfo.FirstName;
                 userInfo.LastName = educator.LastName ?? userInfo.LastName;
                 userInfo.Gender = educator.Gender ?? userInfo.Gender;
@@ -66,6 +65,110 @@ namespace JwtSample.Server.Controllers
                 return sendError(ex.Message);
             }
 
+        }
+
+        [Authorize]
+        [HttpPost("api/v1/recordings")]
+        public ActionResult PostRecording([FromBody] Recording recording)
+        {
+            // Serialize response
+            Response.ContentType = "application/json";
+
+            if (recording == null)
+                return sendError("Malformed recording object");
+
+            Educator educator = getSecureUser();
+            if (educator == null)//Should not happen, because Authorize probably would not accept that token
+                return sendError("User NOT found");
+
+            recording.EducatorId = educator.EducatorId;
+            Recording rec = new Recording { Date = recording.Date, EducatorId = educator.EducatorId, RecordingName = recording.RecordingName,
+                Transcription = recording.Transcription};
+            _context.Recordings.Add(recording);
+
+            _context.SaveChanges();
+
+            return Ok(recording);
+        }
+
+        [Authorize]
+        [HttpPost("api/v1/childrenrecording")]
+        public ActionResult PostChildRecordings([FromBody] ChildrenRecordingInOuts childrenRecordingInOuts)
+        {
+            // Serialize response
+            Response.ContentType = "application/json";
+
+            if (childrenRecordingInOuts == null)
+                return sendError("Malformed recording object");
+
+            Educator educator = getSecureUser();
+            if (educator == null)//Should not happen, because Authorize probably would not accept that token
+                return sendError("User NOT found");
+
+            //Check that recording exists
+            int recordingId = childrenRecordingInOuts.RecordingId;
+            var recording = _context.Recordings.FirstOrDefault(r => r.RecordingId == recordingId);
+            if (recording == null)
+                return sendError($"Recording {recordingId} NOT found");
+
+            //Check that all children belong to that Educator
+            if (childrenRecordingInOuts.ChildrenRecordings != null)
+            {
+                foreach (ChildRecording childRecording in childrenRecordingInOuts.ChildrenRecordings)
+                {
+                    //                    Child c = _context.Children.First(c => c.ChildId == child.ChildId);
+                    Child aChild = _context.Children.First(c => c.ChildId == childRecording.ChildId);
+                    if (aChild == null)
+                        return sendError($"Child {childRecording.ChildId} NOT found");
+                    if (aChild.EducatorId != educator.EducatorId)
+                        return sendError($"Child {childRecording.ChildId} Does NOT belong to this Educator");                    
+                }
+                //Update the ChildRecording relationship
+                foreach (ChildRecording childRecording in childrenRecordingInOuts.ChildrenRecordings)
+                {
+                    try
+                    {
+                        ChildRecording cr = new ChildRecording { RecordingId = childrenRecordingInOuts.RecordingId, ChildId = childRecording.ChildId, Number = childRecording.Number };
+                        _context.ChildRecording.Add(cr);
+                        _context.SaveChanges();
+                    }
+                    catch(Exception ex)
+                    {
+                        return sendError("Error updating. Perhaps record already exists. " + ex.Message);
+                    }
+                }
+                return Ok(null);
+            }
+            return sendError("No Data found");
+
+        }
+
+        [Authorize]
+        [HttpPut("api/v1/recordings/{id}")]
+        public ActionResult PutRecording(int? id, [FromBody] Recording recording)
+        {
+            // Serialize response
+            Response.ContentType = "application/json";
+
+            if (recording == null)
+                return sendError("Malformed recording object");
+
+            Educator educator = getSecureUser();
+            if (educator == null)//Should not happen, because Authorize probably would not accept that token
+                return sendError("User NOT found");
+
+            Recording localRecording = new Recording
+            {
+                Date = recording.Date,
+                EducatorId = educator.EducatorId,
+                RecordingName = recording.RecordingName,
+                Transcription = recording.Transcription
+            };
+            _context.Recordings.Add(localRecording);
+
+            _context.SaveChanges();
+
+            return Ok(recording);
         }
 
         [Authorize]
@@ -102,6 +205,12 @@ namespace JwtSample.Server.Controllers
                 Educator educator = getSecureUser();
                 if (educator == null)
                     return sendError("User NOT found");
+
+                var all = _context.Children;
+                foreach(Child x in all)
+                {
+                    Console.WriteLine("Name: " + x.Name);
+                }
 
                 var children = _context.Children.Where(c => c.EducatorId == educator.EducatorId);
 
@@ -221,7 +330,7 @@ namespace JwtSample.Server.Controllers
             var response = new
             {
                 educatorId = educator.EducatorId,
-                token = educator.token
+                token = educator.Token
             };
 
             // Serialize response
