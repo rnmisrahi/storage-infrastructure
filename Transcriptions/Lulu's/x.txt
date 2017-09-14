@@ -1,0 +1,24 @@
+Kids_Car.G40.E13.txt
+Kitchen_Table_G40.E13.txt
+Letters.G32.txt
+Letters_90.G34.txt
+List of Files.txt
+Open_Window.G32.txt
+Snow_White.G45.txt
+Teepee.E18.txt
+Truck.G40.E13.txt
+A+N1.N33.txt
+A+N2.N33.txt
+Alphabet.G30.txt
+Alphabet.txt.G30.bak
+At_Gan.G45.txt
+Beauty_And_The_Beast.G40.txt
+Camilla.C28.txt
+Cinderella.G40.E13.txt
+Cinderella.G40.E13.txt.bak
+Dinner.G32.txt
+Dinner.G32.txt.bak
+Happy_Birthday.G35.txt
+Happy_Birthday.txt.G35.bak
+HP_Car.G40.E13.txt
+x.txt
