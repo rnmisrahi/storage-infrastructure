@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Models\ApplicationUser.cs" />
+    <Compile Remove="Models\ChildInOut.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\index.html" />
@@ -35,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
-    <Folder Include="Models\ViewModel\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Properties\Settings.settings">

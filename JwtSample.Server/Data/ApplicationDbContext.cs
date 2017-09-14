@@ -45,6 +45,8 @@ namespace JwtSample.Server.Data
             //builder.Entity<ChildRecording>().HasOne(cr => cr.Recording);
 
             //builder.Entity<ChildRecordingInOuts>().ToTable("ChildRecordingInOuts");
+
+            builder.Entity<Recording>().ToTable("Recording");
         }
 
     }

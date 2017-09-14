@@ -5,6 +5,8 @@ using JwtSample.Server.Data;
 using JwtSample.Server.Models;
 using System.Linq;
 using System.Collections.Generic;
+using JwtSample.Server.Models.ViewModel;
+using System.Reflection;
 
 namespace JwtSample.Server.Controllers
 {
@@ -92,6 +94,43 @@ namespace JwtSample.Server.Controllers
         }
 
         [Authorize]
+        [HttpGet("api/v1/childdata/{id}")]
+        public ActionResult GetChildData(int? id)
+        {
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                Educator educator = getSecureUser();
+                if (educator == null)
+                    return sendError("User NOT found");
+
+                Child aChild = _context.Children.First(c => c.ChildId == id);
+                if (aChild == null)
+                    return sendError($"Child {id} NOT found");
+                if (aChild.EducatorId != educator.EducatorId)
+                    return sendError($"Child {id} Does NOT belong to this Educator");
+
+                //var recordings = _context.Recordings.Where(r => r.EducatorId == educator.EducatorId);
+                ViewChildData vcd = new ViewChildData();
+                List<Recording> lr = new List<Recording>();
+                //var x = lr.AsQueryable();
+                var x = (from r in _context.Recordings
+                     join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
+                     where (cr.ChildId == id)
+                     select new Recording { Date = r.Date, RecordingName = r.RecordingName, WordCounter = r.WordCounter  });
+                vcd.Recordings = x.ToList();
+
+                return Ok(vcd);
+            }
+            catch (Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+        }
+
+        [Authorize]
         [HttpPost("api/v1/childrenrecording")]
         public ActionResult PostChildRecordings([FromBody] ChildrenRecordingInOuts childrenRecordingInOuts)
         {
@@ -128,7 +167,7 @@ namespace JwtSample.Server.Controllers
                 {
                     try
                     {
-                        ChildRecording cr = new ChildRecording { RecordingId = childrenRecordingInOuts.RecordingId, ChildId = childRecording.ChildId, Number = childRecording.Number };
+                        ChildRecording cr = new ChildRecording { RecordingId = childrenRecordingInOuts.RecordingId, ChildId = childRecording.ChildId };
                         _context.ChildRecording.Add(cr);
                         _context.SaveChanges();
                     }

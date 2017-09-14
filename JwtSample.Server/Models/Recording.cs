@@ -16,6 +16,7 @@ namespace JwtSample.Server.Models
         public int Duration { get; set; }
         [Column(TypeName = "varchar(MAX)")]
         public string Transcription { get; set; }
+        public string RecordingFileName { get; set; }
 
         ///public virtual ICollection<Child> Children { get; set; }
     }

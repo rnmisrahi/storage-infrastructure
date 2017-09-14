@@ -8,6 +8,8 @@ namespace JwtSample.Server.Models
 {
     public class Child
     {
+        //int _age = 0;
+
         [Key]
         public int ChildId { get; set; }
         public int EducatorId { get; set; }
@@ -18,7 +20,9 @@ namespace JwtSample.Server.Models
 
         ///public virtual ICollection<Recording> Recordings { get; set; }
 
-        public virtual int months { get
+        public virtual int age
+        {
+            get
             {
                 int m = (DateTime.Now.Year - Birthday.Year) * 12 + (DateTime.Now.Month - Birthday.Month);
                 int d = DateTime.Now.Day - Birthday.Day;
