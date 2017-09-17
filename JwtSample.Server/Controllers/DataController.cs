@@ -94,6 +94,73 @@ namespace JwtSample.Server.Controllers
         }
 
         [Authorize]
+        [HttpGet("api/v1/wordcountdata/{id}")]
+        public ActionResult GetWordCountData(int? id)
+        {
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                Educator educator = getSecureUser();
+                if (educator == null)
+                    return sendError("User NOT found");
+
+                Child aChild = _context.Children.First(c => c.ChildId == id);
+                if (aChild == null)
+                    return sendError($"Child {id} NOT found");
+                if (aChild.EducatorId != educator.EducatorId)
+                    return sendError($"Child {id} Does NOT belong to this Educator");
+
+                List<Recording> lr = new List<Recording>();
+                var x = (from r in _context.Recordings
+                         join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
+                         where (cr.ChildId == id)
+                         select new OutRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration=r.Duration });
+
+                x = x.OrderBy(c => c.Date);
+
+                int lastDay = -1;
+                int day;
+                List<DailyWord> dailyWords = new List<DailyWord>();
+                DailyWord dailyWord = null;
+                DateTime wordDay;
+                if (x.Count() > 0)
+                {
+                    foreach (OutRecording r in x)
+                    {
+                        day = r.Date.Day;
+                        wordDay = new DateTime(r.Date.Year, r.Date.Month, r.Date.Day);
+                        if (day != lastDay)
+                        {
+                            if (dailyWord != null)
+                            { //This is Not the first time
+                                dailyWords.Add(dailyWord);
+                            }
+                            dailyWord = new DailyWord{ChildId = id, Date=wordDay};
+                                dailyWord.WordCount += r.WordCounter;
+                                dailyWord.Recordings = new List<OutRecording>();
+                                dailyWord.Recordings.Add(r);
+                        }
+                        else
+                        {
+                            dailyWord.WordCount += r.WordCounter;
+                            dailyWord.Recordings.Add(r);
+                        }
+                        lastDay = day;
+                    }
+                    dailyWords.Add(dailyWord);
+                } //if (x.count() > 0)
+
+                return Ok(dailyWords);
+            }
+            catch (Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+        }
+
+        [Authorize]
         [HttpGet("api/v1/childdata/{id}")]
         public ActionResult GetChildData(int? id)
         {
@@ -119,7 +186,9 @@ namespace JwtSample.Server.Controllers
                 var x = (from r in _context.Recordings
                      join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
                      where (cr.ChildId == id)
-                     select new Recording { Date = r.Date, RecordingName = r.RecordingName, WordCounter = r.WordCounter  });
+                         select new OutRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
+
+                x = x.OrderBy(c => c.Date);
                 vcd.Recordings = x.ToList();
 
                 return Ok(vcd);
