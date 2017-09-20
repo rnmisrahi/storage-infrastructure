@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using JwtSample.Server.Models.ViewModel;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using JwtSample.Server.Models.KB;
 
 namespace JwtSample.Server.Controllers
 {
@@ -60,7 +62,7 @@ namespace JwtSample.Server.Controllers
 
                 _context.SaveChanges();
 
-                return Ok(userInfo);
+                return Ok(null);
             }
             catch (Exception ex)
             {
@@ -73,24 +75,52 @@ namespace JwtSample.Server.Controllers
         [HttpPost("api/v1/recordings")]
         public ActionResult PostRecording([FromBody] Recording recording)
         {
-            // Serialize response
-            Response.ContentType = "application/json";
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
 
-            if (recording == null)
-                return sendError("Malformed recording object");
+                if (recording == null)
+                    return sendError("Malformed recording object");
 
-            Educator educator = getSecureUser();
-            if (educator == null)//Should not happen, because Authorize probably would not accept that token
-                return sendError("User NOT found");
+                Educator educator = getSecureUser();
+                if (educator == null)//Should not happen, because Authorize probably would not accept that token
+                    return sendError("User NOT found");
 
-            recording.EducatorId = educator.EducatorId;
-            Recording rec = new Recording { Date = recording.Date, EducatorId = educator.EducatorId, RecordingName = recording.RecordingName,
-                Transcription = recording.Transcription};
-            _context.Recordings.Add(recording);
+                recording.EducatorId = educator.EducatorId;
+                Recording rec = new Recording
+                {
+                    Date = recording.Date,
+                    EducatorId = educator.EducatorId,
+                    RecordingName = recording.RecordingName,
+                    Transcription = recording.Transcription
+                };
+                _context.Recordings.Add(recording);
 
-            _context.SaveChanges();
+                _context.SaveChanges();
 
-            return Ok(recording);
+                return Ok(null);
+            }
+            catch(Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+        }
+        private bool validateChild(Educator educator, int? id, out string message)
+        {
+            message = null;
+            Child aChild = _context.Children.FirstOrDefault(c => c.ChildId == id);
+            if (aChild == null)
+            {
+                message = $"Child {id} NOT found";
+                return false;
+            }
+            if (aChild.EducatorId != educator.EducatorId)
+            {
+                message = $"Child {id} Does NOT belong to this Educator";
+                return false;
+            }
+            return true;
         }
 
         [Authorize]
@@ -106,13 +136,10 @@ namespace JwtSample.Server.Controllers
                 if (educator == null)
                     return sendError("User NOT found");
 
-                Child aChild = _context.Children.First(c => c.ChildId == id);
-                if (aChild == null)
-                    return sendError($"Child {id} NOT found");
-                if (aChild.EducatorId != educator.EducatorId)
-                    return sendError($"Child {id} Does NOT belong to this Educator");
+                string error;
+                if (!validateChild(educator, id, out error))
+                    return sendError(error);
 
-                List<Recording> lr = new List<Recording>();
                 var x = (from r in _context.Recordings
                          join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
                          where (cr.ChildId == id)
@@ -137,7 +164,7 @@ namespace JwtSample.Server.Controllers
                             { //This is Not the first time
                                 dailyWords.Add(dailyWord);
                             }
-                            dailyWord = new DailyWord{ChildId = id, Date=wordDay};
+                            dailyWord = new DailyWord{ChildId = id, Date=wordDay };
                                 dailyWord.WordCount += r.WordCounter;
                                 dailyWord.Recordings = new List<OutRecording>();
                                 dailyWord.Recordings.Add(r);
@@ -152,7 +179,79 @@ namespace JwtSample.Server.Controllers
                     dailyWords.Add(dailyWord);
                 } //if (x.count() > 0)
 
-                return Ok(dailyWords);
+                Days d = new Days();
+                d.days = dailyWords;
+
+                return Ok(d);
+            }
+            catch (Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("api/v1/allcountdata")]
+        public ActionResult GetAllCountData()
+        {
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                Educator educator = getSecureUser();
+                if (educator == null)
+                    return sendError("User NOT found");
+
+                var x = (from r in _context.Recordings
+                         join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
+                         where r.EducatorId == educator.EducatorId
+                         select new OutRecording { childId = cr.ChildId, id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
+
+                x = x.OrderBy(c => c.childId).OrderBy(c => c.Date);
+                int count = 0;
+                int lastDay = -1;
+                int dayOfTheMonth;
+                int dayId = 0;
+                List<DailyWord> dailyWords = new List<DailyWord>();
+                DailyWord dailyWord = null;
+                DateTime wordDay;
+                if (x.Count() > 0)
+                {
+                    foreach (OutRecording r in x)
+                    {
+                        dayOfTheMonth = r.Date.Day;
+                        wordDay = new DateTime(r.Date.Year, r.Date.Month, r.Date.Day);
+                        r.Number = ++count;
+                        if (dayOfTheMonth != lastDay)
+                        {
+                            if (dailyWord != null)
+                            { //This is Not the first time
+                                dailyWords.Add(dailyWord);
+                            }
+                            dailyWord = new DailyWord { ChildId = r.childId, Date = wordDay, id = ++dayId };
+                            dailyWord.WordCount += r.WordCounter;
+                            dailyWord.Recordings = new List<OutRecording>();
+                            dailyWord.Recordings.Add(r);
+                        }
+                        else
+                        {
+                            dailyWord.WordCount += r.WordCounter;
+                            dailyWord.Recordings.Add(r);
+                        }
+                        lastDay = dayOfTheMonth;
+                    }
+                    dailyWords.Add(dailyWord);
+                } //if (x.count() > 0)
+
+                Days d = new Days();
+                d.days = dailyWords;
+
+                WCL wcl = new WCL();
+                wcl.WordCountList = new List<Days>();
+                wcl.WordCountList.Add(d);
+
+                return Ok(wcl);
             }
             catch (Exception ex)
             {
@@ -173,11 +272,9 @@ namespace JwtSample.Server.Controllers
                 if (educator == null)
                     return sendError("User NOT found");
 
-                Child aChild = _context.Children.First(c => c.ChildId == id);
-                if (aChild == null)
-                    return sendError($"Child {id} NOT found");
-                if (aChild.EducatorId != educator.EducatorId)
-                    return sendError($"Child {id} Does NOT belong to this Educator");
+                string error;
+                if (!validateChild(educator, id, out error))
+                    return sendError(error);
 
                 //var recordings = _context.Recordings.Where(r => r.EducatorId == educator.EducatorId);
                 ViewChildData vcd = new ViewChildData();
@@ -189,7 +286,25 @@ namespace JwtSample.Server.Controllers
                          select new OutRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
 
                 x = x.OrderBy(c => c.Date);
+                int count = 0;
+                foreach (OutRecording viewRec in x)
+                {
+                    viewRec.Number = ++count;
+                }
+
                 vcd.Recordings = x.ToList();
+
+                //Add Tips
+                List<Tip> tips = _context.Tips.ToList<Tip>();
+                List<ViewTip> viewTips = new List<ViewTip>();
+                int n = tips.Count();
+                int seed = (int)DateTime.Now.Ticks;
+                Random rnd = new Random(seed);
+
+                    int k = rnd.Next(0, n - 1);
+                    viewTips.Add(getATip(tips, k, id));
+
+                vcd.Tips = viewTips;
 
                 return Ok(vcd);
             }
@@ -224,12 +339,14 @@ namespace JwtSample.Server.Controllers
             {
                 foreach (ChildRecording childRecording in childrenRecordingInOuts.ChildrenRecordings)
                 {
-                    //                    Child c = _context.Children.First(c => c.ChildId == child.ChildId);
-                    Child aChild = _context.Children.First(c => c.ChildId == childRecording.ChildId);
-                    if (aChild == null)
-                        return sendError($"Child {childRecording.ChildId} NOT found");
-                    if (aChild.EducatorId != educator.EducatorId)
-                        return sendError($"Child {childRecording.ChildId} Does NOT belong to this Educator");                    
+                    //Child aChild = _context.Children.First(c => c.ChildId == childRecording.ChildId);
+                    //if (aChild == null)
+                    //    return sendError($"Child {childRecording.ChildId} NOT found");
+                    //if (aChild.EducatorId != educator.EducatorId)
+                    //    return sendError($"Child {} Does NOT belong to this Educator");                    
+                    string error;
+                    if (!validateChild(educator, childRecording.ChildId, out error))
+                        return sendError(error);
                 }
                 //Update the ChildRecording relationship
                 foreach (ChildRecording childRecording in childrenRecordingInOuts.ChildrenRecordings)
@@ -255,28 +372,35 @@ namespace JwtSample.Server.Controllers
         [HttpPut("api/v1/recordings/{id}")]
         public ActionResult PutRecording(int? id, [FromBody] Recording recording)
         {
-            // Serialize response
-            Response.ContentType = "application/json";
-
-            if (recording == null)
-                return sendError("Malformed recording object");
-
-            Educator educator = getSecureUser();
-            if (educator == null)//Should not happen, because Authorize probably would not accept that token
-                return sendError("User NOT found");
-
-            Recording localRecording = new Recording
+            try
             {
-                Date = recording.Date,
-                EducatorId = educator.EducatorId,
-                RecordingName = recording.RecordingName,
-                Transcription = recording.Transcription
-            };
-            _context.Recordings.Add(localRecording);
+                // Serialize response
+                Response.ContentType = "application/json";
 
-            _context.SaveChanges();
+                if (recording == null)
+                    return sendError("Malformed recording object");
 
-            return Ok(recording);
+                Educator educator = getSecureUser();
+                if (educator == null)//Should not happen, because Authorize probably would not accept that token
+                    return sendError("User NOT found");
+
+                Recording localRecording = new Recording
+                {
+                    Date = recording.Date,
+                    EducatorId = educator.EducatorId,
+                    RecordingName = recording.RecordingName,
+                    Transcription = recording.Transcription
+                };
+                _context.Recordings.Add(localRecording);
+
+                _context.SaveChanges();
+
+                return Ok(recording);
+            }
+            catch (Exception ex)
+            {
+                return sendError(ex.Message);
+            }
         }
 
         [Authorize]
@@ -315,14 +439,11 @@ namespace JwtSample.Server.Controllers
                     return sendError("User NOT found");
 
                 var all = _context.Children;
-                foreach(Child x in all)
-                {
-                    Console.WriteLine("Name: " + x.Name);
-                }
+                var allChildren = _context.Children.Where(c => c.EducatorId == educator.EducatorId);
 
-                var children = _context.Children.Where(c => c.EducatorId == educator.EducatorId);
-
-                return Ok(children);
+                ViewChildren VC = new ViewChildren();
+                VC.children = allChildren.ToList();
+                return Ok(new ViewChildren { children = allChildren.ToList() });
             }
             catch(Exception ex)
             {
@@ -343,9 +464,10 @@ namespace JwtSample.Server.Controllers
                 if (educator == null)
                     return sendError("User NOT found");
 
+                string error;
+                if (!validateChild(educator, id, out error))
+                    return sendError(error);
                 var child = _context.Children.FirstOrDefault(c => (c.ChildId == id) && (c.EducatorId == educator.EducatorId));
-                if (child == null)
-                    return sendError("Child NOT found");
 
                 return Ok(child);
             }
@@ -354,6 +476,109 @@ namespace JwtSample.Server.Controllers
                 return sendError(ex.Message);
             }
         }//GetChildren
+
+        private List<WordOfTheDay> wordsOfTheDay(Child child)
+        {
+            var entries = (from d in _context.WordDatas
+                           join w in _context.Words on d.WordId equals w.WordId
+                           join c in _context.Categories on w.CategoryId equals c.CategoryId
+                           where d.Age == child.age
+                           where d.Percentile >= 0.80
+                           orderby d.Percentile descending
+                           select new WordOfTheDay
+                           {
+                               Word = w.Definition, Topic=c.Name, ChildId=child.ChildId
+                               //Definition = w.Definition, Category = c.Name, Percentile = d.Percentile
+                           }
+                           ).Take(5);
+
+            return entries.ToList();
+
+        }
+
+        [Authorize]
+        [HttpGet("api/v1/worddata/{id}")]
+        public IActionResult GetWordData(int? id)
+        {
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                Educator educator = getSecureUser();
+                if (educator == null)
+                    return sendError("User NOT found");
+
+                string error;
+                if (!validateChild(educator, id, out error))
+                    return sendError(error);
+
+                Child child = _context.Children.FirstOrDefault(c => c.ChildId == id);
+                List<WordOfTheDay> allWordsOfTheDay = new List<WordOfTheDay>();
+                    allWordsOfTheDay.AddRange(wordsOfTheDay(child));
+
+                int count = 0;
+                foreach (WordOfTheDay w in allWordsOfTheDay)
+                {
+                    w.Id = ++count;
+                }
+
+                ViewWordsOfTheDay VWD = new ViewWordsOfTheDay();
+                VWD.wordsOfTheDay = allWordsOfTheDay;
+                return Ok(VWD);
+            }
+            catch (Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+        }
+
+        private ViewTip getATip(List<Tip> tips, int k, int? childId)
+        {
+            List<Tip> tipsList = tips.ToList();
+            string s = tipsList[k].Text;
+            string p = tipsList[k].Type;
+            int tipId = tipsList[k].id;
+            ViewTip vTip = new ViewTip { ChildId = childId, Text = s, Type = p, id = tipId };
+            return vTip;
+        }
+
+        [Authorize]
+        [HttpGet("api/v1/generaldata")]
+        public IActionResult GetGeneralData()
+        {
+            try
+            {
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                Educator educator = getSecureUser();
+                if (educator == null)
+                    return sendError("User NOT found");
+
+                //var all = _context.Children;
+                var children = _context.Children.Where(c => c.EducatorId == educator.EducatorId);
+                List<Tip> tips = _context.Tips.ToList<Tip>();
+
+                List<ViewTip> viewTips = new List<ViewTip>();
+                int n = tips.Count();
+                int seed = (int)DateTime.Now.Ticks;
+                Random rnd = new Random(seed);
+
+                foreach (Child x in children)
+                {
+                    int k = rnd.Next(0, n - 1);
+                    viewTips.Add(getATip(tips, k, x.ChildId));
+                }
+
+                ViewGeneralData VGD = new ViewGeneralData { tips = viewTips.ToList() };
+                return Ok(VGD);
+            }
+            catch (Exception ex)
+            {
+                return sendError(ex.Message);
+            }
+        }
 
         [Authorize]
         [HttpPost("api/v1/children")]
@@ -371,7 +596,7 @@ namespace JwtSample.Server.Controllers
             if (q.Count() > 0)
                 return sendError("Child already exists");
 
-            var newChild = new Child { Name = child.Name, Birthday = child.Birthday, EducatorId = educator.EducatorId };
+            var newChild = new Child { Name = child.Name, Birthday = child.Birthday, EducatorId = educator.EducatorId, Image=child.Image, Nickname=child.Nickname };
             _context.Children.Add(newChild);
             _context.SaveChanges();
 
@@ -451,4 +676,5 @@ namespace JwtSample.Server.Controllers
         }//Educators
 
     }
+
 }

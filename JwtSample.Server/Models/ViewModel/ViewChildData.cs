@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JwtSample.Server.Models.KB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace JwtSample.Server.Models.ViewModel
     //Used only to generate a Response in childdata
     public class ViewChildData
     {
-        public ICollection<Tip> Tips { get; set; }
+        public ICollection<ViewTip> Tips { get; set; }
         public ICollection<OutRecording> Recordings { get; set; }
         public ICollection<TodaysWord> TodaysWords { get; set; }
     }
@@ -16,6 +17,7 @@ namespace JwtSample.Server.Models.ViewModel
     public class OutRecording
     {
         public int id { get; set; }
+        public int childId { get; set; }
         public int Number { get; set; }
         public DateTime Date { get; set; }
         public int WordCounter { get; set; }
@@ -35,12 +37,39 @@ namespace JwtSample.Server.Models.ViewModel
 
     public class DailyWord
     {
-        public int DailyWordId { get; set; }
         public DateTime Date { get; set; }
         public int WordCount { get; set; }
-        public int ExpectedWordCount { get; set; }
+        public int ExpectedWordCount { get { return 5000; } }
         public ICollection<OutRecording> Recordings { get; set; }
+        public int id { get; set; }
         public int? ChildId { get; set; }
     }
 
+    public class Days
+    {
+        public List<DailyWord> days { get; set; }
+    }
+
+    public class WCL
+    {
+        public List<Days> WordCountList { get; set; }
+    }
+
+    public class ViewTip
+    {
+        public int id { get; set; }
+        public string Text { get; set; }
+        public string Type { get; set; }
+        public int? ChildId { get; set; }
+    }
+
+    public class ViewChildren
+    {
+        public List<Child> children { get; set; }
+    }
+
+    public class ViewGeneralData
+    {
+        public List<ViewTip> tips { get; set; }
+    }
 }

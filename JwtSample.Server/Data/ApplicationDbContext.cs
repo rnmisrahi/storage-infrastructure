@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using JwtSample.Server.Models;
+using JwtSample.Server.Models.KB;
 
 namespace JwtSample.Server.Data
 {
@@ -14,6 +15,15 @@ namespace JwtSample.Server.Data
         public DbSet<Child> Children { get; set; }
         public DbSet<Recording> Recordings { get; set; }
         public DbSet<ChildRecording> ChildRecording { get; set; }
+        public DbSet<Word> Words { get; set; }
+        public DbSet<WordType> WordTypes { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<WordData> WordDatas { get; set; }
+
+        public DbSet<Tip> Tips { get; set; }
+
+
+        //public DbSet<WordStat> WordStat { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -47,6 +57,13 @@ namespace JwtSample.Server.Data
             //builder.Entity<ChildRecordingInOuts>().ToTable("ChildRecordingInOuts");
 
             builder.Entity<Recording>().ToTable("Recording");
+
+            builder.Entity<Category>().ToTable("Category");
+            builder.Entity<WordType>().ToTable("WordType");
+            builder.Entity<Word>().ToTable("Word");
+            builder.Entity<WordData>().ToTable("WordData");
+
+            builder.Entity<Tip>().ToTable("Tip");
         }
 
     }

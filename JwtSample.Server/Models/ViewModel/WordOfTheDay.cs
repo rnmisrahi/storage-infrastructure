@@ -13,4 +13,9 @@ namespace JwtSample.Server.Models.ViewModel
         public int ChildId { get; set; }
         public int Id { get; set; }
     }
+
+    public class ViewWordsOfTheDay
+    {
+        public List<WordOfTheDay> wordsOfTheDay { get; set; }
+    }
 }

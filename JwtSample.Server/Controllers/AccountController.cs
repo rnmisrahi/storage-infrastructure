@@ -19,7 +19,7 @@ namespace JwtSample.Server.Controllers
             _context = context;
         }
 
-        [HttpPost("/login")]
+        [HttpPost("api/v1/login")]
         public async Task Token()
         {
             try
