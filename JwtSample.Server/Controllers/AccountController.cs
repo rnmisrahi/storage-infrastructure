@@ -34,7 +34,6 @@ namespace JwtSample.Server.Controllers
                 //This is as it is now: urlencode
                 var facebookId = Request.Form["facebookId"];
 
-
                 var identity = Utilities.GetIdentity(facebookId);
 
                 Response.ContentType = "application/json";
@@ -55,11 +54,13 @@ namespace JwtSample.Server.Controllers
                     exists = (q != null) && (q.FacebookId != null);
                     if (exists) // The following implies that the token was found
                     {
+                        var children = _context.Children.Where(c => c.EducatorId == q.EducatorId);
+                        int childrenCount = children.Count();
                         var responseExists = new
                         {
                             token = q.Token,
                             username = identity.Name,
-                            signedUp = true
+                            signedUp = (childrenCount > 0)
                         };
                         await Response.WriteAsync(JsonConvert.SerializeObject(responseExists, new JsonSerializerSettings { Formatting = Formatting.Indented }));
                         return;
@@ -71,9 +72,9 @@ namespace JwtSample.Server.Controllers
                     {
                         token = Utilities.generateToken(facebookId),
                         username = identity.Name,
-                        signedUp = true
+                        signedUp = false
                     };
-                    Educator educator = new Educator { FacebookId = facebookId, Token = responseNew.token, SignedUp = true };
+                    Educator educator = new Educator { FacebookId = facebookId, Token = responseNew.token, SignedUp = false };
                     _context.Educators.Add(educator);
                     _context.SaveChanges();
                     await Response.WriteAsync(JsonConvert.SerializeObject(responseNew, new JsonSerializerSettings { Formatting = Formatting.Indented }));

@@ -12,6 +12,10 @@ namespace JwtSample.Server.Models.ViewModel
         public string Topic { get; set; }
         public int ChildId { get; set; }
         public int Id { get; set; }
+        public List<string> InfoList{ get; set; }
+        public List<string> QuestionList { get; set; }
+        public List<string> ActivitiesList { get; set; }
+        public List<string> OurFaveList { get; set; }
     }
 
     public class ViewWordsOfTheDay

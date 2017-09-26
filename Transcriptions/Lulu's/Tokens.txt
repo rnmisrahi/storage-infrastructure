@@ -1,4 +1,6 @@
 Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiU29waGllIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiVXNlciIsIm5iZiI6MTUwNTczNTg1NSwiZXhwIjoxNTM3MjcxODU1LCJpc3MiOiJNeUF1dGhTZXJ2ZXIiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUxODg0LyJ9.FJU9SgVZYubD2zng5cQFLQJg4O6CwZ1MMwsOVo3pBKw
+
+
 Sophie jwt2
 
 Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiU29waGllIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiVXNlciIsIm5iZiI6MTUwNTc3NDQyMCwiZXhwIjoxNTM3MzEwNDIwLCJpc3MiOiJNeUF1dGhTZXJ2ZXIiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUxODg0LyJ9.oXxhhNDDSJHU8uxfNsiesXK014lvbp3FsTeS4kNK7Mg
@@ -16,3 +18,45 @@ Lulu Localhost
 http://localhost:58744/api/v1/
 
 http://talkjwt2.azurewebsites.net/api/v1
+
+http://talkjwt2.azurewebsites.net/api/v1/worddata/31
+
+
+/api/v1/children
+/api/v1/worddata/id
+/api/v1/childdata/id
+/api/v1/wordcountdata/id (I followed the schema, not the example)
+/api/v1/allcountdata
+/api/v1/generaldata
+/api/v1/childdata/id
+
+Children:
+ID	Birthday	Image								Name
+22	2011-01-07 https://static.pexels.com/photos/261895/pexels-photo-261895.jpeg	Stam
+23	2016-07-07 https://static.pexels.com/photos/220455/pexels-photo-220455.jpeg	Gamzoo
+25	2017-02-23 https://static.pexels.com/photos/220455/pexels-photo-220455.jpeg	Sophie
+30	2016-09-12 http://res.cloudinary.com/talklet/image/upload/77dc2eec-f2f4-41db-a7fd-03388a399056.jpg	NewKid
+31	2015-12-20 http://res.cloudinary.com/talklet/image/upload/94348622-187a-40c3-9571-e8618d47055b.jpg	Shantova
+
+Recordings:
+ID	Date
+9	2017-09-22 
+10	2017-09-29 
+11	2017-09-29 
+
+
+Children attenfing Recordings:
+Child	Recording ID
+22	9
+25	9
+30	9
+30	10
+31	10
+22	11
+30	11
+
+If you need me to add or change some data please let me know.
+I had to add data artificially because we don't have a way to upload and transcribe the audio.
+
+
+

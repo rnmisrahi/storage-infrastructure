@@ -9,6 +9,6 @@ namespace JwtSample.Server.Models
     {
         public string token { get; set; }
         public string facebookId { get; set; }
-        public bool sugnedUp { get; set; }
+        public bool signedUp { get; set; }
     }
 }

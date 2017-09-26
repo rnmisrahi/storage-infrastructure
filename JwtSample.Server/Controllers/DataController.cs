@@ -517,11 +517,21 @@ namespace JwtSample.Server.Controllers
                 List<WordOfTheDay> allWordsOfTheDay = new List<WordOfTheDay>();
                     allWordsOfTheDay.AddRange(wordsOfTheDay(child));
 
+                foreach (WordOfTheDay word in allWordsOfTheDay)
+                {
+                    word.InfoList = FakeInfo.InfoList;
+                    word.QuestionList = FakeInfo.QuestionList;
+                    word.ActivitiesList = FakeInfo.ActivitiesList;
+                    word.OurFaveList = FakeInfo.OurFaveList;
+                }
+
+
                 int count = 0;
                 foreach (WordOfTheDay w in allWordsOfTheDay)
                 {
                     w.Id = ++count;
                 }
+
 
                 ViewWordsOfTheDay VWD = new ViewWordsOfTheDay();
                 VWD.wordsOfTheDay = allWordsOfTheDay;
