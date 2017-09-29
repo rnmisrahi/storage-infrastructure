@@ -10,14 +10,25 @@ namespace JwtSample.Server.Models.ViewModel
     public class ViewChildData
     {
         public ICollection<ViewTip> Tips { get; set; }
-        public ICollection<OutRecording> Recordings { get; set; }
+        public ICollection<ViewRecording> Recordings { get; set; }
         public ICollection<TodaysWord> TodaysWords { get; set; }
     }
 
-    public class OutRecording
+    public class ViewRecording
     {
         public int id { get; set; }
+        //public int childId { get; set; }
+        public int Number { get; set; }
+        public DateTime Date { get; set; }
+        public int WordCounter { get; set; }
+        public int Duration { get; set; }
+    }
+
+    public class ViewChildRecording
+    {
         public int childId { get; set; }
+        //public ViewRecording viewRecording { get; set; }
+        public int id { get; set; }
         public int Number { get; set; }
         public DateTime Date { get; set; }
         public int WordCounter { get; set; }
@@ -40,19 +51,19 @@ namespace JwtSample.Server.Models.ViewModel
         public DateTime Date { get; set; }
         public int WordCount { get; set; }
         public int ExpectedWordCount { get { return 5000; } }
-        public ICollection<OutRecording> Recordings { get; set; }
+        public ICollection<ViewChildRecording> Recordings { get; set; }
         public int id { get; set; }
         public int? ChildId { get; set; }
     }
 
-    public class Days
+    public class DailyWordList
     {
         public List<DailyWord> days { get; set; }
     }
 
     public class WCL
     {
-        public List<Days> WordCountList { get; set; }
+        public List<DailyWordList> WordCountList { get; set; }
     }
 
     public class ViewTip

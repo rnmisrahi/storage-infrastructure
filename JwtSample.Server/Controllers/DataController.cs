@@ -143,7 +143,7 @@ namespace JwtSample.Server.Controllers
                 var x = (from r in _context.Recordings
                          join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
                          where (cr.ChildId == id)
-                         select new OutRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration=r.Duration });
+                         select new ViewChildRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration=r.Duration });
 
                 x = x.OrderBy(c => c.Date);
 
@@ -154,7 +154,7 @@ namespace JwtSample.Server.Controllers
                 DateTime wordDay;
                 if (x.Count() > 0)
                 {
-                    foreach (OutRecording r in x)
+                    foreach (ViewChildRecording r in x)
                     {
                         day = r.Date.Day;
                         wordDay = new DateTime(r.Date.Year, r.Date.Month, r.Date.Day);
@@ -166,7 +166,7 @@ namespace JwtSample.Server.Controllers
                             }
                             dailyWord = new DailyWord{ChildId = id, Date=wordDay };
                                 dailyWord.WordCount += r.WordCounter;
-                                dailyWord.Recordings = new List<OutRecording>();
+                                dailyWord.Recordings = new List<ViewChildRecording>();
                                 dailyWord.Recordings.Add(r);
                         }
                         else
@@ -179,7 +179,7 @@ namespace JwtSample.Server.Controllers
                     dailyWords.Add(dailyWord);
                 } //if (x.count() > 0)
 
-                Days d = new Days();
+                DailyWordList d = new DailyWordList();
                 d.days = dailyWords;
 
                 return Ok(d);
@@ -206,9 +206,9 @@ namespace JwtSample.Server.Controllers
                 var x = (from r in _context.Recordings
                          join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
                          where r.EducatorId == educator.EducatorId
-                         select new OutRecording { childId = cr.ChildId, id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
+                         select new ViewChildRecording { id = r.RecordingId, childId=cr.ChildId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
 
-                x = x.OrderBy(c => c.childId).OrderBy(c => c.Date);
+                x = x.OrderBy(c => c.Date).OrderBy(cr => cr.childId);
                 int count = 0;
                 int lastDay = -1;
                 int dayOfTheMonth;
@@ -218,7 +218,7 @@ namespace JwtSample.Server.Controllers
                 DateTime wordDay;
                 if (x.Count() > 0)
                 {
-                    foreach (OutRecording r in x)
+                    foreach (ViewChildRecording r in x)
                     {
                         dayOfTheMonth = r.Date.Day;
                         wordDay = new DateTime(r.Date.Year, r.Date.Month, r.Date.Day);
@@ -231,7 +231,7 @@ namespace JwtSample.Server.Controllers
                             }
                             dailyWord = new DailyWord { ChildId = r.childId, Date = wordDay, id = ++dayId };
                             dailyWord.WordCount += r.WordCounter;
-                            dailyWord.Recordings = new List<OutRecording>();
+                            dailyWord.Recordings = new List<ViewChildRecording>();
                             dailyWord.Recordings.Add(r);
                         }
                         else
@@ -244,11 +244,11 @@ namespace JwtSample.Server.Controllers
                     dailyWords.Add(dailyWord);
                 } //if (x.count() > 0)
 
-                Days d = new Days();
+                DailyWordList d = new DailyWordList();
                 d.days = dailyWords;
 
                 WCL wcl = new WCL();
-                wcl.WordCountList = new List<Days>();
+                wcl.WordCountList = new List<DailyWordList>();
                 wcl.WordCountList.Add(d);
 
                 return Ok(wcl);
@@ -283,11 +283,11 @@ namespace JwtSample.Server.Controllers
                 var x = (from r in _context.Recordings
                      join cr in _context.ChildRecording on r.RecordingId equals cr.RecordingId
                      where (cr.ChildId == id)
-                         select new OutRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
+                         select new ViewRecording { id = r.RecordingId, Number = r.Number, Date = r.Date, WordCounter = r.WordCounter, Duration = r.Duration });
 
                 x = x.OrderBy(c => c.Date);
                 int count = 0;
-                foreach (OutRecording viewRec in x)
+                foreach (ViewRecording viewRec in x)
                 {
                     viewRec.Number = ++count;
                 }
