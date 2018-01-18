@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using JwtSample.Server.Data;
 using Microsoft.IdentityModel.Tokens;
 using JwtSample.Server.Controllers;
+using JwtSample.Server.LogProvider;
 
 namespace JwtSample.Server
 {
@@ -15,6 +16,8 @@ namespace JwtSample.Server
     {
         private IHostingEnvironment _env;
         private string _testSecret = null;
+        public static ILoggerFactory _loggerFactory;
+        private string connectionString = null;
 
         public Startup(IHostingEnvironment env)
         {
@@ -40,7 +43,7 @@ namespace JwtSample.Server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            String connectionString = _env.IsDevelopment() ? "LocalConnection" : "DefaultConnection";
+            connectionString = _env.IsDevelopment() ? "LocalConnection" : "DefaultConnection";
 
             _testSecret = Configuration["JwtSecret"];
 
@@ -68,9 +71,12 @@ namespace JwtSample.Server
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext context)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            _loggerFactory = loggerFactory;
+            _loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
-
+            loggerFactory.AddAzureWebAppDiagnostics();
+            //TODO: The LogLevel needs to be Warning on release
+            loggerFactory.AddContext(LogLevel.Information, Configuration.GetConnectionString(connectionString));
             app.UseDefaultFiles();
             app.UseStaticFiles();
 

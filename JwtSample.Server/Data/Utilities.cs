@@ -62,6 +62,7 @@ namespace JwtSample.Server.Data
             // if the user cannot be found and could not be found or added
             throw new Exception(facebookId + " Could NOT be found or added");
         }
+
     }
 
 

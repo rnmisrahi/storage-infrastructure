@@ -83,4 +83,14 @@ namespace JwtSample.Server.Models.ViewModel
     {
         public List<ViewTip> tips { get; set; }
     }
+
+    public class ViewEducators
+    {
+        public List<Educator> educators { get; set; }
+    }
+
+    public class SignedUp
+    {
+        public bool signedup { get; set; }
+    }
 }

@@ -9,6 +9,8 @@ using JwtSample.Server.Models.ViewModel;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using JwtSample.Server.Models.KB;
+using Microsoft.Extensions.Logging;
+using JwtSample.Server.LogProvider;
 
 namespace JwtSample.Server.Controllers
 {
@@ -16,9 +18,19 @@ namespace JwtSample.Server.Controllers
     public class DataController : Controller
     {
         private readonly ApplicationDbContext _context;
-        public DataController(ApplicationDbContext context)
+        private readonly ILogger _logger;
+
+        private void logApi(Microsoft.AspNetCore.Http.HttpRequest request)
+        {
+            _logger.LogInformation((int)LoggingEvents.API, Request.Path);
+            _logger.LogInformation("Request Headers: {0}", request.Headers);
+        }
+
+
+        public DataController(ApplicationDbContext context, ILogger<AccountController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         private Educator getSecureUser()
@@ -38,13 +50,56 @@ namespace JwtSample.Server.Controllers
         [HttpGet("api/v1/userInfo")]
         public IActionResult GetUserInfo()
         {
+            logApi(Request);
+            _logger.LogInformation("UserId: {0}", User.Identity.Name);
             return Ok($"UserId: {User.Identity.Name}");
+        }
+
+        [Authorize]
+        [HttpGet("api/v1/signedup/status")]
+        public ActionResult GetSignedupStatus()
+        {
+            logApi(Request);
+            Response.ContentType = "application/json";
+            try
+            {
+                Educator educator = getSecureUser();
+                bool res = (educator != null);
+
+                //Now look for children of that educator
+                if (res)
+                {
+                    Child aChild = _context.Children.FirstOrDefault(c => c.EducatorId == educator.EducatorId);
+                    res = aChild != null;
+                }
+                //    return sendError("User NOT found");
+
+
+                //string search = token;
+
+                //var q = _context.Educators.Where(x => x.Token == search).FirstOrDefault();
+
+                //bool exists = (q != null) && (q.FacebookId != null);
+
+                var response = new
+                {
+                    signedup = res
+                };
+
+                return Ok(new SignedUp { signedup = res });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
+                return sendError(ex.Message);
+            }
         }
 
         [Authorize]
         [HttpPost("api/v1/senduserdetails")]
         public ActionResult SendUserDetails([FromBody]Educator educator)
         {
+            logApi(Request);
             Response.ContentType = "application/json";
             try
             {
@@ -66,6 +121,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
 
@@ -75,6 +131,7 @@ namespace JwtSample.Server.Controllers
         [HttpPost("api/v1/recordings")]
         public ActionResult PostRecording([FromBody] Recording recording)
         {
+            logApi(Request);
             try
             {
                 // Serialize response
@@ -103,9 +160,11 @@ namespace JwtSample.Server.Controllers
             }
             catch(Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
+
         private bool validateChild(Educator educator, int? id, out string message)
         {
             message = null;
@@ -129,6 +188,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -186,6 +246,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
@@ -196,6 +257,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -255,6 +317,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
@@ -265,6 +328,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -310,6 +374,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
@@ -318,6 +383,7 @@ namespace JwtSample.Server.Controllers
         [HttpPost("api/v1/childrenrecording")]
         public ActionResult PostChildRecordings([FromBody] ChildrenRecordingInOuts childrenRecordingInOuts)
         {
+            logApi(Request);
             // Serialize response
             Response.ContentType = "application/json";
 
@@ -359,6 +425,7 @@ namespace JwtSample.Server.Controllers
                     }
                     catch(Exception ex)
                     {
+                        _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                         return sendError("Error updating. Perhaps record already exists. " + ex.Message);
                     }
                 }
@@ -374,6 +441,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -399,6 +467,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
@@ -407,6 +476,7 @@ namespace JwtSample.Server.Controllers
         [HttpGet("api/v1/userdetails")]
         public ActionResult UserDetails()
         {
+            logApi(Request);
             Response.ContentType = "application/json";
             Educator userInfo = getSecureUser();
             if (userInfo == null)
@@ -431,6 +501,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -447,6 +518,7 @@ namespace JwtSample.Server.Controllers
             }
             catch(Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }//GetChildren
@@ -457,6 +529,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -473,6 +546,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }//GetChildren
@@ -487,12 +561,23 @@ namespace JwtSample.Server.Controllers
                            orderby d.Percentile descending
                            select new WordOfTheDay
                            {
-                               Word = w.Definition, Topic=c.Name, ChildId=child.ChildId
+                               Word = w.Definition, Topic = c.Name, ChildId = child.ChildId
                                //Definition = w.Definition, Category = c.Name, Percentile = d.Percentile
                            }
-                           ).Take(5);
+                           );//.Take(5);
+            var e = entries.ToList();
+            
+           int n = (e.Count > 5) ? 5 : e.Count;
+            int seed = (int)DateTime.Now.Ticks;
+            Random rnd = new Random(seed);
+            while (e.Count > n)
+            {
+                int k = rnd.Next(e.Count);
+                e.RemoveAt(k);
+            }
 
-            return entries.ToList();
+
+            return e;// entries.ToList();
 
         }
 
@@ -502,6 +587,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -539,6 +625,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
@@ -559,6 +646,7 @@ namespace JwtSample.Server.Controllers
         {
             try
             {
+                logApi(Request);
                 // Serialize response
                 Response.ContentType = "application/json";
 
@@ -586,6 +674,7 @@ namespace JwtSample.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
                 return sendError(ex.Message);
             }
         }
@@ -594,6 +683,7 @@ namespace JwtSample.Server.Controllers
         [HttpPost("api/v1/children")]
         public IActionResult PostChildren([FromBody] Child child)
         {
+            logApi(Request);
             // Serialize response
             Response.ContentType = "application/json";
             Request.ContentType = "application/json";
@@ -619,6 +709,7 @@ namespace JwtSample.Server.Controllers
         [HttpDelete("api/v1/children/{id}")]
         public IActionResult Children(int? id)
         {
+            logApi(Request);
             Response.ContentType = "application/json";
 
             Educator educator = getSecureUser();
@@ -640,6 +731,7 @@ namespace JwtSample.Server.Controllers
         [HttpPut("api/v1/children/{id}")]
         public IActionResult Children(int? id, [FromBody][Bind("Name, Nickname, Birthday,Image")]Child child)
         {
+            logApi(Request);
             Response.ContentType = "application/json";
 
             Educator educator = getSecureUser();
@@ -668,6 +760,7 @@ namespace JwtSample.Server.Controllers
         [HttpPost("api/v1/educators")]
         public ActionResult Educators()
         {
+            logApi(Request);
             List<Educator> educators = _context.Educators.ToList();
             var educator = _context.Educators.FirstOrDefault();
             var response = new
@@ -679,11 +772,36 @@ namespace JwtSample.Server.Controllers
             // Serialize response
             Response.ContentType = "application/json";
 
-            //await Response.WriteAsync(JsonConvert.SerializeObject(response, new JsonSerializerSettings { Formatting = Formatting.Indented }));
-
-            //return Ok($"First Educator: {educator.EducatorId} - ({educator.token}) There");
             return Ok(_context.Educators);
         }//Educators
+
+        [Authorize]
+        [HttpGet("api/v1/educators")]
+        public IActionResult GetEducators()
+        {
+            try
+            {
+                logApi(Request);
+                // Serialize response
+                Response.ContentType = "application/json";
+
+                Educator educator = getSecureUser();
+                if (educator == null)
+                    return sendError("User NOT found");
+
+                var all = _context.Educators;
+
+                ViewEducators ve = new ViewEducators();
+                ve.educators = all.ToList();
+                return Ok(new ViewEducators { educators = all.ToList() });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning((int)LoggingEvents.ERROR, ex, "Error");
+                return sendError(ex.Message);
+            }
+        }//GetEducators
+
 
     }
 
